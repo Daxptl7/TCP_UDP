@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TCP Socket Programming & Protocol Visualizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-group">
+                <div class="logo-icon">⚡</div>
+                <div>
+                    <h1>TCP Socket Programming Suite</h1>
+                    <p class="subtitle">Study of Transmission Control Protocol & Socket API Implementation</p>
+                </div>
+            </div>
+            <div class="header-badges">
+                <span class="badge badge-python">Python 3.13 Compatible</span>
+                <span class="badge badge-protocol">TCP/IP Layer 4</span>
+                <span class="badge badge-status">● 6/6 Procedures Verified</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Navigation Tabs -->
+        <nav class="nav-tabs" id="procedureTabs">
+            <button class="tab-btn active" data-tab="tab-diagram">📐 TCP State & Handshake</button>
+            <button class="tab-btn" data-tab="tab-p1">1. Google Client</button>
+            <button class="tab-btn" data-tab="tab-p2">2. Telnet Server</button>
+            <button class="tab-btn" data-tab="tab-p3">3. Echo Single Msg</button>
+            <button class="tab-btn" data-tab="tab-p4">4. Turn-Based Chat</button>
+            <button class="tab-btn" data-tab="tab-p5">5. select() Multiplex</button>
+            <button class="tab-btn" data-tab="tab-p6">6. Chat Room Broadcast</button>
+        </nav>
+
+        <!-- TAB 0: TCP State Machine & 3-Way Handshake Animation -->
+        <section class="tab-content active" id="tab-diagram">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h2>Transmission Control Protocol: 3-Way Handshake & Teardown</h2>
+                    <div class="action-row">
+                        <button class="btn btn-primary" id="btnRunHandshake">▶ Play 3-Way Handshake</button>
+                        <button class="btn btn-secondary" id="btnRunTeardown">⏹ Play 4-Way Teardown</button>
+                        <button class="btn btn-outline" id="btnResetSimulation">🔄 Reset</button>
+                    </div>
+                </div>
+
+                <!-- Simulation Visualizer -->
+                <div class="simulation-canvas">
+                    <div class="host-node client-node">
+                        <div class="node-icon">💻</div>
+                        <h3>TCP Client</h3>
+                        <div class="node-state" id="clientStateBadge">CLOSED</div>
+                        <div class="node-port">Port: 54321 (Ephemeral)</div>
+                        <div class="socket-call" id="clientCurrentCall">s = socket(AF_INET, SOCK_STREAM)</div>
+                    </div>
+
+                    <div class="wire-channel">
+                        <div class="packet-track" id="packetTrack">
+                            <div class="packet" id="packetElement" style="display: none;">
+                                <span class="packet-flag" id="packetFlag">SYN</span>
+                                <span class="packet-desc" id="packetDetails">Seq=100</span>
+                            </div>
+                        </div>
+                        <div class="timeline-log" id="timelineLog">
+                            <div class="log-entry system-entry">Simulation ready. Click "Play 3-Way Handshake" to visualize TCP packet exchange.</div>
+                        </div>
+                    </div>
+
+                    <div class="host-node server-node">
+                        <div class="node-icon">🖥️</div>
+                        <h3>TCP Server</h3>
+                        <div class="node-state" id="serverStateBadge">LISTEN</div>
+                        <div class="node-port">Port: 12345 (Well-known)</div>
+                        <div class="socket-call" id="serverCurrentCall">s.bind(('', 12345)) & s.listen(5)</div>
+                    </div>
+                </div>
+
+                <!-- Socket API Lifecycle Table -->
+                <div class="api-lifecycle-grid">
+                    <div class="api-block">
+                        <h4>Client Socket Lifecycle</h4>
+                        <ol class="code-steps">
+                            <li><code>s = socket(AF_INET, SOCK_STREAM)</code> - Allocate TCP endpoint</li>
+                            <li><code>s.connect((host, port))</code> - Sends SYN, receives SYN-ACK, sends ACK</li>
+                            <li><code>s.sendall(data)</code> / <code>s.recv(1024)</code> - Full-duplex data transfer</li>
+                            <li><code>s.close()</code> - Sends FIN, triggers 4-way termination</li>
+                        </ol>
+                    </div>
+                    <div class="api-block">
+                        <h4>Server Socket Lifecycle</h4>
+                        <ol class="code-steps">
+                            <li><code>s = socket(AF_INET, SOCK_STREAM)</code> - Allocate TCP endpoint</li>
+                            <li><code>s.bind(('', port))</code> - Bind to local address and port</li>
+                            <li><code>s.listen(backlog)</code> - Transition into passive LISTEN mode</li>
+                            <li><code>c, addr = s.accept()</code> - Blocks until 3-way handshake completes</li>
+                            <li><code>c.sendall(data)</code> / <code>c.recv(1024)</code> - Communicate with accepted client</li>
+                            <li><code>c.close()</code> - Release active connection socket</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 1: Procedure 1 -->
+        <section class="tab-content" id="tab-p1">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h2>Procedure 1: Client Program that Connects to Google.com</h2>
+                    <span class="badge badge-success">DNS Resolution + HTTP Request</span>
+                </div>
+                <p class="desc">Resolves domain <code>www.google.com</code> to an IP address via DNS, initiates a TCP handshake on port 80, sends an HTTP request, and parses the response headers.</p>
+                <div class="interactive-split">
+                    <div class="interactive-pane">
+                        <h3>Interactive Live Simulator</h3>
+                        <button class="btn btn-primary" id="btnSimP1">Execute Google Client</button>
+                        <div class="terminal-box" id="termP1">
+                            <span class="prompt">$ python3 01_google_client/client.py</span>
+                            <div class="terminal-output" id="outputP1">Ready to execute. Click above.</div>
+                        </div>
+                    </div>
+                    <div class="code-pane">
+                        <h3>Python 3 Code Implementation</h3>
+                        <pre><code>import socket
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+host = socket.gethostbyname('www.google.com')
+port = 80
+
+s.connect((host, port))
+print("socket connected to google http server")
+
+# Send HTTP HEAD request
+req = "HEAD / HTTP/1.1\r\nHost: www.google.com\r\nConnection: close\r\n\r\n"
+s.sendall(req.encode('utf-8'))
+response = s.recv(1024)
+print(response.decode('utf-8'))
+s.close()</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 2: Procedure 2 -->
+        <section class="tab-content" id="tab-p2">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h2>Procedure 2: Server Program with Telnet / Netcat Interaction</h2>
+                    <span class="badge badge-info">Passive Listen & Accept</span>
+                </div>
+                <p class="desc">Server creates a socket, binds to port 12345, listens with a backlog queue of 5, accepts an incoming client, transmits <code>Thank you for connecting\n</code>, and closes the connection.</p>
+                <div class="interactive-split">
+                    <div class="interactive-pane">
+                        <h3>Interactive Simulator</h3>
+                        <div class="button-group">
+                            <button class="btn btn-primary" id="btnSimP2Client">Simulate Python Client</button>
+                            <button class="btn btn-secondary" id="btnSimP2Nc">Simulate Netcat: nc 127.0.0.1 12345</button>
+                        </div>
+                        <div class="terminal-box" id="termP2">
+                            <span class="prompt">$ Server active on port 12345</span>
+                            <div class="terminal-output" id="outputP2">Server listening for incoming connections...</div>
+                        </div>
+                    </div>
+                    <div class="code-pane">
+                        <h3>Python 3 Code Implementation</h3>
+                        <pre><code>import socket
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+port = 12345
+s.bind(('', port))
+s.listen(5)
+
+while True:
+    c, addr = s.accept()
+    print('Got connection from', addr)
+    c.send(b'Thank you for connecting\n')
+    c.close()</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: Procedure 3 -->
+        <section class="tab-content" id="tab-p3">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h2>Procedure 3: Echo Client and Server (Single Message)</h2>
+                    <span class="badge badge-success">Single-Shot Echo Exchange</span>
+                </div>
+                <p class="desc">Client inputs a message, sends it across the TCP stream; the server reads the buffer with <code>recv(1024)</code>, logs it, and echoes it back byte-for-byte.</p>
+                <div class="interactive-split">
+                    <div class="interactive-pane">
+                        <h3>Interactive Echo Demonstration</h3>
+                        <div class="input-form">
+                            <input type="text" id="inputP3" class="text-input" placeholder="Enter message to echo..." value="Hello from Socket Lab!">
+                            <button class="btn btn-primary" id="btnSimP3">Send & Echo</button>
+                        </div>
+                        <div class="terminal-box" id="termP3">
+                            <div class="terminal-output" id="outputP3">Ready. Enter text and click "Send & Echo".</div>
+                        </div>
+                    </div>
+                    <div class="code-pane">
+                        <h3>Echo Pair Code</h3>
+                        <pre><code># Client:
+buf = input('Enter a message to send: ')
+s.sendall(buf.encode('utf-8'))
+print(s.recv(1024).decode('utf-8'))
+
+# Server:
+buf = c.recv(1024)
+print('received ' + buf.decode('utf-8'))
+c.sendall(buf)
+c.close()</code></pre>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 4: Procedure 4 -->
+        <section class="tab-content" id="tab-p4">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h2>Procedure 4: Turn-Based Half-Duplex Chat</h2>
+                    <span class="badge badge-warning">Sequential Turn-Taking ('bye' to exit)</span>
+                </div>
+                <p class="desc">Client sends a message, server replies, and the two endpoints alternate turns until either party sends <code>bye</code>.</p>
+                <div class="dual-terminal-view">
+                    <div class="terminal-half">
+                        <h4>Client Terminal</h4>
+                        <div class="terminal-box small-term" id="termP4Client">
+                            <div class="terminal-output" id="outputP4Client">Connected to server. Ready to chat.</div>
+                        </div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="inputP4Client" class="text-input" placeholder="Client message...">
+                            <button class="btn btn-primary" id="btnSendP4Client">Client Send</button>
+                        </div>
+                    </div>
+                    <div class="terminal-half">
+                        <h4>Server Terminal</h4>
+                        <div class="terminal-box small-term" id="termP4Server">
+                            <div class="terminal-output" id="outputP4Server">Server waiting for client's first turn...</div>
+                        </div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="inputP4Server" class="text-input" placeholder="Server response..." disabled>
+                            <button class="btn btn-secondary" id="btnSendP4Server" disabled>Server Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 5: Procedure 5 -->
+        <section class="tab-content" id="tab-p5">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h2>Procedure 5: Multiplexed Chat via select() (Multiple Messages)</h2>
+                    <span class="badge badge-primary">Asynchronous I/O Multiplexing</span>
+                </div>
+                <p class="desc">Eliminates rigid turn-taking! Both client and server monitor <code>[sys.stdin, socket]</code> simultaneously using <code>select.select()</code>, allowing either side to transmit multiple messages in succession.</p>
+                <div class="dual-terminal-view">
+                    <div class="terminal-half">
+                        <h4>Client Terminal (Non-blocking)</h4>
+                        <div class="terminal-box small-term" id="termP5Client">
+                            <div class="terminal-output" id="outputP5Client">Connected. Type multiple messages at will!</div>
+                        </div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="inputP5Client" class="text-input" placeholder="Client typing...">
+                            <button class="btn btn-primary" id="btnSendP5Client">Send</button>
+                        </div>
+                    </div>
+                    <div class="terminal-half">
+                        <h4>Server Terminal (Non-blocking)</h4>
+                        <div class="terminal-box small-term" id="termP5Server">
+                            <div class="terminal-output" id="outputP5Server">Client connected. Both sides can type freely!</div>
+                        </div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="inputP5Server" class="text-input" placeholder="Server typing...">
+                            <button class="btn btn-secondary" id="btnSendP5Server">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 6: Procedure 6 -->
+        <section class="tab-content" id="tab-p6">
+            <div class="card glass-card">
+                <div class="card-header">
+                    <h2>Procedure 6: Multi-Client Chat Room (Threaded Broadcast)</h2>
+                    <span class="badge badge-success">Multi-Threaded Server & Group Broadcast</span>
+                </div>
+                <p class="desc">The server spawns a dedicated thread for every connected user. When any client sends a message, it is broadcast to all other participants in the room.</p>
+                <div class="multi-client-grid">
+                    <!-- Client A -->
+                    <div class="client-card">
+                        <div class="client-card-header">
+                            <span class="user-avatar">👤</span>
+                            <strong>Client 1 (Alice)</strong>
+                            <span class="client-ephemeral">Port: 54101</span>
+                        </div>
+                        <div class="terminal-box tiny-term" id="termP6A">
+                            <div class="terminal-output" id="outputP6A">Welcome to this chatroom!</div>
+                        </div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="inputP6A" class="text-input" placeholder="Message as Alice...">
+                            <button class="btn btn-sm btn-primary" id="btnSendP6A">Send</button>
+                        </div>
+                    </div>
+
+                    <!-- Client B -->
+                    <div class="client-card">
+                        <div class="client-card-header">
+                            <span class="user-avatar">👤</span>
+                            <strong>Client 2 (Bob)</strong>
+                            <span class="client-ephemeral">Port: 54102</span>
+                        </div>
+                        <div class="terminal-box tiny-term" id="termP6B">
+                            <div class="terminal-output" id="outputP6B">Welcome to this chatroom!</div>
+                        </div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="inputP6B" class="text-input" placeholder="Message as Bob...">
+                            <button class="btn btn-sm btn-primary" id="btnSendP6B">Send</button>
+                        </div>
+                    </div>
+
+                    <!-- Client C -->
+                    <div class="client-card">
+                        <div class="client-card-header">
+                            <span class="user-avatar">👤</span>
+                            <strong>Client 3 (Charlie)</strong>
+                            <span class="client-ephemeral">Port: 54103</span>
+                        </div>
+                        <div class="terminal-box tiny-term" id="termP6C">
+                            <div class="terminal-output" id="outputP6C">Welcome to this chatroom!</div>
+                        </div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="inputP6C" class="text-input" placeholder="Message as Charlie...">
+                            <button class="btn btn-sm btn-primary" id="btnSendP6C">Send</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Server Broadcast Monitor -->
+                <div class="server-broadcast-log">
+                    <h4>Server Broadcast Monitor (Console Output)</h4>
+                    <div class="terminal-box small-term" id="termP6Server">
+                        <div class="terminal-output" id="outputP6Server">
+                            [+] Chat Room Server active on port 12345<br>
+                            [+] Client ('127.0.0.1', 54101) connected.<br>
+                            [+] Client ('127.0.0.1', 54102) connected.<br>
+                            [+] Client ('127.0.0.1', 54103) connected. Total active: 3
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="app-footer">
+        <p>Computer Networks Laboratory · Transmission Control Protocol & Socket Programming · Google DeepMind Advanced Agentic Coding</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
